@@ -1,2 +1,2 @@
 # Mini-DBMS
-Design an dimplement a small scale relational database management system
+Design and implement a small scale relational database management system
