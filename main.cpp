@@ -27,7 +27,91 @@ void checkSchema(string table, vector<string>& schema){
     }
     schemafile.close();
 }
+
+//Checking the given string is number or not
+bool is_number(const std::string& s) {
+    std::string::const_iterator it = s.begin();
+    while (it != s.end() && std::isdigit(*it)) 
+        it++;
+    return !s.empty() && it == s.end();
+}
+
+//Finding datatype 
+void getDatatype(string tableName,vector<string>& data, vector<string> schema){
+    for(int i=2;i<schema.size();i+=2){
+        data.push_back(schema[i]);
+    }
+}
+
+//Insert function
+void insert_Into(vector<string> cmd){
+    string table_name = cmd[2];
+    vector<string> schema;
+    checkSchema(table_name, schema);
+    if(schema.empty()){
+        cout << "Table is not already exist" << endl;
+        cout << "\n-----------------------------------------------------------------" << endl;
+        return;
+    }
+
+    fstream table;
+    table_name += ".txt";
+    const char *c = table_name.c_str();
+    table.open(c, ios::app);
+
+    int start = -1, end = -1;
+    for (int i=4; i<cmd.size(); i++) {
+        if (cmd[i] == "(") {
+            start = i;
+        }
+        if (cmd[i] == ")") {
+            end = i;
+        }
+    }
+
+    if (start == -1 || end == -1) {
+        cout << "Error" << endl;
+        return;
+    }
+
+    int k=0; 
+    bool invalidType=false;
+    int st=start;
+    vector<string> data;
+    getDatatype(table_name, data, schema);
+
+    while (st < end - 1) {
+        st++;
+        if (cmd[st] != ",") {
+            bool flag_int = is_number(cmd[st]);
+            if( ( data[k]!="int" && flag_int ) || 
+                ( data[k]=="int" && !flag_int )){
+                cout<<"Invalid Data Type "<<cmd[st]<<endl;
+                cout << "\n-----------------------------------------------------------------" << endl;
+                return;
+            }
+            k++;
+        }
+    }
+
+    while (start < end - 1) {
+        start++;
+        if (cmd[start] != ",") {
+            table << cmd[start];
+            if (start != end - 1) {
+                table << "#";
+            } else {
+                table << "\n";
+            }
+        }
+    }
+    schemafile << endl;
+    cout << "Tuple inserted successfully" << endl;
+    schemafile.close();
+    cout << "\n-----------------------------------------------------------------" << endl;
+}
 //Describe table
+
 void describe(vector<string> cmd){
     schemafile.open("Schema.txt", ios::in);
     int flag =0;
@@ -59,7 +143,7 @@ void describe(vector<string> cmd){
                 }
             }
         }
-        if(flag ==0){
+        if(flag == 0){
             cout << "Table is not already exist" << endl;
         cout << "\n-----------------------------------------------------------------" << endl;
         return;
@@ -188,7 +272,9 @@ void handleCmd(vector<string> cmd){
     else if (cmd[0] == "describe" && cmd[1] == "table") {
         describe(cmd);
     }
-   
+   else if (cmd[0] == "insert" && cmd[1] == "into") {
+        insert_Into(cmd);
+    }
 }
 
 void convertToVector(string input, vector<string> &v){
@@ -209,13 +295,13 @@ void convertToVector(string input, vector<string> &v){
 int main() {
     cout<<endl;
     cout << "\n-----------------------------------------------------------------\n" << endl;
-    // cout<<"\t     Group No. :- 45\t\n\tDatabase Management System\t\n"<<endl;
+    cout<<"\t     Group No. :- 45\t\n\tDatabase Management System\t\n"<<endl;
 
     cout << "\n-----------------------------------------------------------------\n" << endl;
     vector<string> cmd;
     string input;
     cout<<"Enter your SQL command: "<<endl;
-    cout<<"\t\t1. create table\n\t\t2. Drop table\n\t\t3. Describe table\n"<<endl;
+    cout<<"\t\t1. create table\n\t\t2. Drop table\n\t\t3. Describe table\n\t\t4. Insert Into\n"<<endl;
     getline(cin, input);
     while (input != "Quit") {
         convertToVector(input, cmd);
@@ -223,7 +309,7 @@ int main() {
         cmd.clear();
         cout<<endl;
         cout<<"Enter your SQL command: "<<endl;
-        cout<<"\t\t1. create table\n\t\t2. Drop table\n\t\t3. Describe table\n"<<endl;
+        cout<<"\t\t1. create table\n\t\t2. Drop table\n\t\t3. Describe table\n\t\t4. Insert Into\n"<<endl;
         getline(cin, input);
     }
     cout << "\n-----------------------------------------------------------------" << endl;
